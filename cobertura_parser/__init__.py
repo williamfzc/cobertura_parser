@@ -117,3 +117,31 @@ class CoberturaParser(object):
     @staticmethod
     def get_node_attr(node: Node, name: str):
         return getattr(node, f"@{name}")
+
+    def get_structure(self, with_line: bool = None):
+        def _parse_method(method_tree: _Method):
+            _result = []
+            for each_line in method_tree.root.sub_nodes[0].sub_nodes:
+                _result.append(
+                    (getattr(each_line, "@number"), getattr(each_line, "@hits"))
+                )
+            return _result
+
+        def _parse_kls(kls_tree: _Class):
+            _result = {}
+            for each_method in self.get_method_trees(kls_tree):
+                _result[each_method.get_name()] = (
+                    _parse_method(each_method) if with_line else None
+                )
+            return _result
+
+        def _parse_pkg(pkg_tree: _Package) -> dict:
+            _result = {}
+            for each_kls in self.get_class_trees(pkg_tree):
+                _result[each_kls.get_name()] = _parse_kls(each_kls)
+            return _result
+
+        data = {}
+        for each_package in self.get_package_trees():
+            data[each_package.get_name()] = _parse_pkg(each_package)
+        return data
