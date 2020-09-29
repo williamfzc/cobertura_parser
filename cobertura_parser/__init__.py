@@ -133,7 +133,8 @@ class CoberturaParser(object):
                     details.append(
                         (getattr(each_line, "@number"), getattr(each_line, "@hits"))
                     )
-            _result[key_start], _result[key_end] = details[0][0], details[-1][0]
+            if details:
+                _result[key_start], _result[key_end] = details[0][0], details[-1][0]
             return _result
 
         def _parse_kls(kls_tree: _Class):
