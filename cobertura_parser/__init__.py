@@ -121,10 +121,11 @@ class CoberturaParser(object):
     def get_structure(self, with_line: bool = None):
         def _parse_method(method_tree: _Method):
             _result = []
-            for each_line in method_tree.root.sub_nodes[0].sub_nodes:
-                _result.append(
-                    (getattr(each_line, "@number"), getattr(each_line, "@hits"))
-                )
+            for each_lines in method_tree.root.sub_nodes:
+                for each_line in each_lines.sub_nodes:
+                    _result.append(
+                        (getattr(each_line, "@number"), getattr(each_line, "@hits"))
+                    )
             return _result
 
         def _parse_kls(kls_tree: _Class):
