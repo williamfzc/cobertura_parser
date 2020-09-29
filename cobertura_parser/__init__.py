@@ -28,6 +28,38 @@ from planter import Node
 from planter import Compiler
 
 
+class _CoberturaObject(Tree):
+    def get_name(self):
+        return getattr(self.root, "@name")
+
+    def get_line_rate(self):
+        return getattr(self.root, "@line-rate")
+
+    def get_branch_rate(self):
+        return getattr(self.root, "@branch-rate")
+
+    def get_line_count(self):
+        return getattr(self.root, "@line-count")
+
+    def get_line_hits(self):
+        return getattr(self.root, "@line-hits")
+
+    def __getattr__(self, item):
+        return getattr(self.root, f"@{item}")
+
+
+class _Package(_CoberturaObject):
+    pass
+
+
+class _Class(_CoberturaObject):
+    pass
+
+
+class _Method(_CoberturaObject):
+    pass
+
+
 class CoberturaParser(object):
     def __init__(self, content: str):
         self._raw = xmltodict.parse(content)
@@ -52,22 +84,22 @@ class CoberturaParser(object):
     def get_package_nodes(self) -> typing.Iterable[Node]:
         return self.tree.get_nodes_by_name("package")
 
-    def get_package_trees(self) -> typing.Iterable[Tree]:
-        return [Tree(each) for each in self.get_package_nodes()]
+    def get_package_trees(self) -> typing.Iterable[_Package]:
+        return [_Package(each) for each in self.get_package_nodes()]
 
-    def get_class_nodes(self, package: Tree = None) -> typing.Iterable[Node]:
+    def get_class_nodes(self, package: _Package = None) -> typing.Iterable[Node]:
         tree = package or self.tree
         return tree.get_nodes_by_name("class")
 
-    def get_class_trees(self, package: Tree = None) -> typing.Iterable[Tree]:
-        return [Tree(each) for each in self.get_class_nodes(package)]
+    def get_class_trees(self, package: _Package = None) -> typing.Iterable[_Class]:
+        return [_Class(each) for each in self.get_class_nodes(package)]
 
-    def get_method_nodes(self, class_: Tree = None) -> typing.Iterable[Node]:
+    def get_method_nodes(self, class_: _Class = None) -> typing.Iterable[Node]:
         tree = class_ or self.tree
         return tree.get_nodes_by_name("method")
 
-    def get_method_trees(self, class_: Tree = None) -> typing.Iterable[Tree]:
-        return [Tree(each) for each in self.get_method_nodes(class_)]
+    def get_method_trees(self, class_: _Class = None) -> typing.Iterable[_Method]:
+        return [_Method(each) for each in self.get_method_nodes(class_)]
 
     def get_packages(self):
         return [self.get_node_attrs(each) for each in self.get_package_nodes()]
