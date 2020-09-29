@@ -120,12 +120,20 @@ class CoberturaParser(object):
 
     def get_structure(self, with_line: bool = None):
         def _parse_method(method_tree: _Method):
-            _result = []
+            key_start = "start"
+            key_end = "end"
+            details = []
+            _result = {
+                key_start: -1,
+                key_end: -1,
+                "details": details,
+            }
             for each_lines in method_tree.root.sub_nodes:
                 for each_line in each_lines.sub_nodes:
-                    _result.append(
+                    details.append(
                         (getattr(each_line, "@number"), getattr(each_line, "@hits"))
                     )
+            _result[key_start], _result[key_end] = details[0][0], details[-1][0]
             return _result
 
         def _parse_kls(kls_tree: _Class):
