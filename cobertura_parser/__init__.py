@@ -119,9 +119,17 @@ class CoberturaParser(object):
         return getattr(node, f"@{name}")
 
     def get_structure(self, with_line: bool = None):
+        key_package = "packages"
+        key_class = "classes"
+        key_method = "methods"
+
+        key_start = "start"
+        key_end = "end"
+        key_number = "@number"
+        key_hits = "@hits"
+        key_lines = "lines"
+
         def _parse_method(method_tree: _Method):
-            key_start = "start"
-            key_end = "end"
             details = []
             _result = {
                 key_start: -1,
@@ -131,27 +139,47 @@ class CoberturaParser(object):
             for each_lines in method_tree.root.sub_nodes:
                 for each_line in each_lines.sub_nodes:
                     details.append(
-                        (getattr(each_line, "@number"), getattr(each_line, "@hits"))
+                        (getattr(each_line, key_number), getattr(each_line, key_hits))
                     )
             if details:
                 _result[key_start], _result[key_end] = details[0][0], details[-1][0]
             return _result
 
         def _parse_kls(kls_tree: _Class):
-            _result = {}
+            method_info = {}
+            _result = {
+                key_method: method_info,
+                key_start: -1,
+                key_end: -1,
+            }
+            for each in kls_tree.root.sub_nodes:
+                # lines or methods
+                if each.name == key_lines:
+                    lines = each.sub_nodes
+                    _result[key_start], _result[key_end] = (
+                        getattr(lines[0], key_number),
+                        getattr(lines[-1], key_number),
+                    )
             for each_method in self.get_method_trees(kls_tree):
-                _result[each_method.get_name()] = (
+                method_info[each_method.get_name()] = (
                     _parse_method(each_method) if with_line else None
                 )
             return _result
 
         def _parse_pkg(pkg_tree: _Package) -> dict:
-            _result = {}
+            kls_info = {}
+            _result = {
+                key_class: kls_info,
+            }
             for each_kls in self.get_class_trees(pkg_tree):
-                _result[each_kls.get_name()] = _parse_kls(each_kls)
+                kls_info[each_kls.get_name()] = _parse_kls(each_kls)
             return _result
 
-        data = {}
+        package_info = {}
+        data = {
+            # extendable
+            key_package: package_info,
+        }
         for each_package in self.get_package_trees():
-            data[each_package.get_name()] = _parse_pkg(each_package)
+            package_info[each_package.get_name()] = _parse_pkg(each_package)
         return data
