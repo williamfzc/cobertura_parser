@@ -23,5 +23,6 @@ setup(
     install_requires=[
         "xmltodict",
         "planter",
+        "pydantic",
     ],
 )

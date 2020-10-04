@@ -26,6 +26,29 @@ import typing
 from planter import Tree
 from planter import Node
 from planter import Compiler
+from pydantic import BaseModel
+
+
+DEFAULT_LINE_NO = "-1"
+
+
+class _StructureMethod(BaseModel):
+    line_start: str = DEFAULT_LINE_NO
+    line_end: str = DEFAULT_LINE_NO
+
+
+class _StructureKls(BaseModel):
+    methods: typing.Dict[str, _StructureMethod]
+    line_start: str = DEFAULT_LINE_NO
+    line_end: str = DEFAULT_LINE_NO
+
+
+class _StructurePackage(BaseModel):
+    classes: typing.Dict[str, _StructureKls]
+
+
+class CoberturaStructure(BaseModel):
+    packages: typing.Dict[str, _StructurePackage]
 
 
 class _CoberturaObject(Tree):
@@ -122,9 +145,9 @@ class CoberturaParser(object):
         key_package = "packages"
         key_class = "classes"
         key_method = "methods"
+        key_start = "line_start"
+        key_end = "line_end"
 
-        key_start = "start"
-        key_end = "end"
         key_number = "@number"
         key_hits = "@hits"
         key_lines = "lines"
@@ -132,8 +155,8 @@ class CoberturaParser(object):
         def _parse_method(method_tree: _Method):
             details = []
             _result = {
-                key_start: -1,
-                key_end: -1,
+                key_start: DEFAULT_LINE_NO,
+                key_end: DEFAULT_LINE_NO,
                 "details": details,
             }
             for each_lines in method_tree.root.sub_nodes:
@@ -149,8 +172,8 @@ class CoberturaParser(object):
             method_info = {}
             _result = {
                 key_method: method_info,
-                key_start: -1,
-                key_end: -1,
+                key_start: DEFAULT_LINE_NO,
+                key_end: DEFAULT_LINE_NO,
             }
             for each in kls_tree.root.sub_nodes:
                 # lines or methods
@@ -183,3 +206,10 @@ class CoberturaParser(object):
         for each_package in self.get_package_trees():
             package_info[each_package.get_name()] = _parse_pkg(each_package)
         return data
+
+    def get_structure_object(self, *args, **kwargs) -> CoberturaStructure:
+        return CoberturaStructure(**self.get_structure(*args, **kwargs))
+
+    @classmethod
+    def load_structure_object(cls, data: dict) -> CoberturaStructure:
+        return CoberturaStructure(**data)
