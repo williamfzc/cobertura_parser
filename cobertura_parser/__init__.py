@@ -29,7 +29,7 @@ from planter import Compiler
 from pydantic import BaseModel
 
 
-DEFAULT_LINE_NO = "-1"
+DEFAULT_LINE_NO = -1
 
 
 class _StructureMethod(BaseModel):
@@ -40,8 +40,8 @@ class _StructureMethod(BaseModel):
 class _StructureKls(BaseModel):
     methods: typing.Dict[str, _StructureMethod]
     file_name: str
-    line_start: str = DEFAULT_LINE_NO
-    line_end: str = DEFAULT_LINE_NO
+    line_start: int = DEFAULT_LINE_NO
+    line_end: int = DEFAULT_LINE_NO
 
 
 class _StructurePackage(BaseModel):
@@ -168,7 +168,9 @@ class CoberturaParser(object):
                         (getattr(each_line, key_number), getattr(each_line, key_hits))
                     )
             if details:
-                _result[key_start], _result[key_end] = details[0][0], details[-1][0]
+                _result[key_start], _result[key_end] = int(details[0][0]), int(
+                    details[-1][0]
+                )
             return _result
 
         def _parse_kls(kls_tree: _Class):
@@ -184,8 +186,8 @@ class CoberturaParser(object):
                 if each.name == key_lines:
                     lines = each.sub_nodes
                     _result[key_start], _result[key_end] = (
-                        getattr(lines[0], key_number),
-                        getattr(lines[-1], key_number),
+                        int(getattr(lines[0], key_number)),
+                        int(getattr(lines[-1], key_number)),
                     )
             for each_method in self.get_method_trees(kls_tree):
                 method_info[each_method.get_name()] = (
