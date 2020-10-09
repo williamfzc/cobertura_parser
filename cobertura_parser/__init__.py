@@ -33,8 +33,8 @@ DEFAULT_LINE_NO = -1
 
 
 class _StructureMethod(BaseModel):
-    line_start: str = DEFAULT_LINE_NO
-    line_end: str = DEFAULT_LINE_NO
+    line_start: int = DEFAULT_LINE_NO
+    line_end: int = DEFAULT_LINE_NO
 
 
 class _StructureKls(BaseModel):
