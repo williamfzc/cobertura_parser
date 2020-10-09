@@ -33,11 +33,13 @@ DEFAULT_LINE_NO = -1
 
 
 class _StructureMethod(BaseModel):
+    name: str
     line_start: int = DEFAULT_LINE_NO
     line_end: int = DEFAULT_LINE_NO
 
 
 class _StructureKls(BaseModel):
+    name: str
     methods: typing.Dict[str, _StructureMethod]
     file_name: str
     line_start: int = DEFAULT_LINE_NO
@@ -45,6 +47,7 @@ class _StructureKls(BaseModel):
 
 
 class _StructurePackage(BaseModel):
+    name: str
     classes: typing.Dict[str, _StructureKls]
 
 
@@ -150,6 +153,7 @@ class CoberturaParser(object):
         key_start = "line_start"
         key_end = "line_end"
         key_filename = "file_name"
+        key_name = "name"
 
         key_number = "@number"
         key_hits = "@hits"
@@ -158,6 +162,7 @@ class CoberturaParser(object):
         def _parse_method(method_tree: _Method):
             details = []
             _result = {
+                key_name: method_tree.get_name(),
                 key_start: DEFAULT_LINE_NO,
                 key_end: DEFAULT_LINE_NO,
                 "details": details,
@@ -176,6 +181,7 @@ class CoberturaParser(object):
         def _parse_kls(kls_tree: _Class):
             method_info = {}
             _result = {
+                key_name: kls_tree.get_name(),
                 key_method: method_info,
                 key_start: DEFAULT_LINE_NO,
                 key_end: DEFAULT_LINE_NO,
@@ -198,6 +204,7 @@ class CoberturaParser(object):
         def _parse_pkg(pkg_tree: _Package) -> dict:
             kls_info = {}
             _result = {
+                key_name: pkg_tree.get_name(),
                 key_class: kls_info,
             }
             for each_kls in self.get_class_trees(pkg_tree):
