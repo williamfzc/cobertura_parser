@@ -39,6 +39,7 @@ class _StructureMethod(BaseModel):
 
 class _StructureKls(BaseModel):
     methods: typing.Dict[str, _StructureMethod]
+    file_name: str
     line_start: str = DEFAULT_LINE_NO
     line_end: str = DEFAULT_LINE_NO
 
@@ -76,7 +77,8 @@ class _Package(_CoberturaObject):
 
 
 class _Class(_CoberturaObject):
-    pass
+    def get_file_name(self):
+        return getattr(self.root, "@filename")
 
 
 class _Method(_CoberturaObject):
@@ -147,6 +149,7 @@ class CoberturaParser(object):
         key_method = "methods"
         key_start = "line_start"
         key_end = "line_end"
+        key_filename = "file_name"
 
         key_number = "@number"
         key_hits = "@hits"
@@ -174,6 +177,7 @@ class CoberturaParser(object):
                 key_method: method_info,
                 key_start: DEFAULT_LINE_NO,
                 key_end: DEFAULT_LINE_NO,
+                key_filename: kls_tree.get_file_name(),
             }
             for each in kls_tree.root.sub_nodes:
                 # lines or methods
