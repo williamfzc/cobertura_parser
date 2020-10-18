@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 __PROJECT_NAME__ = r"cobertura_parser"
 __AUTHOR__ = r"williamfzc"
 __AUTHOR_EMAIL__ = r"fengzc@vip.qq.com"
-__VERSION__ = r"0.1.2"
+__VERSION__ = r"0.2.0"
 
 setup(
     name=__PROJECT_NAME__,
