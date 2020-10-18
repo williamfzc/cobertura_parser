@@ -154,6 +154,8 @@ class CoberturaParser(object):
         key_end = "line_end"
         key_filename = "file_name"
         key_name = "name"
+        key_details = "details"
+        key_hit_lines = "hit_lines"
 
         key_number = "@number"
         key_hits = "@hits"
@@ -161,17 +163,23 @@ class CoberturaParser(object):
 
         def _parse_method(method_tree: _Method):
             details = []
+            hit_lines = []
             _result = {
                 key_name: method_tree.get_name(),
                 key_start: DEFAULT_LINE_NO,
                 key_end: DEFAULT_LINE_NO,
-                "details": details,
+                key_hit_lines: hit_lines,
+                key_details: details,
             }
             for each_lines in method_tree.root.sub_nodes:
                 for each_line in each_lines.sub_nodes:
-                    details.append(
-                        (getattr(each_line, key_number), getattr(each_line, key_hits))
-                    )
+                    cur_line = getattr(each_line, key_number)
+                    cur_hit = getattr(each_line, key_hits)
+                    if cur_hit != "0":
+                        hit_lines.append(cur_line)
+
+                    details.append((cur_line, cur_hit))
+
             if details:
                 _result[key_start], _result[key_end] = int(details[0][0]), int(
                     details[-1][0]
