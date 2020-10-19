@@ -36,6 +36,11 @@ class _StructureMethod(BaseModel):
     name: str
     line_start: int = DEFAULT_LINE_NO
     line_end: int = DEFAULT_LINE_NO
+    hit_lines: list
+    details: dict = None
+
+    def is_hit(self) -> bool:
+        return bool(self.hit_lines)
 
 
 class _StructureKls(BaseModel):
@@ -45,14 +50,39 @@ class _StructureKls(BaseModel):
     line_start: int = DEFAULT_LINE_NO
     line_end: int = DEFAULT_LINE_NO
 
+    def is_hit(self) -> bool:
+        return any([each.is_hit() for each in self.methods.values()])
+
+    def get_hit_map(self) -> list:
+        return [each.name for each in self.methods.values() if each.is_hit()]
+
 
 class _StructurePackage(BaseModel):
     name: str
     classes: typing.Dict[str, _StructureKls]
 
+    def is_hit(self) -> bool:
+        return any([each.is_hit() for each in self.classes.values()])
+
+    def get_hit_map(self) -> dict:
+        result = dict()
+        for kls_name, kls in self.classes.items():
+            hit_map = kls.get_hit_map()
+            if hit_map:
+                result[kls_name] = hit_map
+        return result
+
 
 class CoberturaStructure(BaseModel):
     packages: typing.Dict[str, _StructurePackage]
+
+    def get_hit_map(self) -> dict:
+        result = dict()
+        for pkg_name, pkg in self.packages.items():
+            hit_map = pkg.get_hit_map()
+            if hit_map:
+                result[pkg_name] = hit_map
+        return result
 
 
 class _CoberturaObject(Tree):
@@ -154,8 +184,8 @@ class CoberturaParser(object):
         key_end = "line_end"
         key_filename = "file_name"
         key_name = "name"
-        key_details = "details"
         key_hit_lines = "hit_lines"
+        key_details = "details"
 
         key_number = "@number"
         key_hits = "@hits"
