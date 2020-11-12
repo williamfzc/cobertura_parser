@@ -176,7 +176,7 @@ class CoberturaParser(object):
     def get_node_attr(node: Node, name: str):
         return getattr(node, f"@{name}")
 
-    def get_structure(self, with_line: bool = None):
+    def get_structure(self, *_, **__):
         key_package = "packages"
         key_class = "classes"
         key_method = "methods"
@@ -234,9 +234,7 @@ class CoberturaParser(object):
                         int(getattr(lines[-1], key_number)),
                     )
             for each_method in self.get_method_trees(kls_tree):
-                method_info[each_method.get_name()] = (
-                    _parse_method(each_method) if with_line else None
-                )
+                method_info[each_method.get_name()] = _parse_method(each_method)
             return _result
 
         def _parse_pkg(pkg_tree: _Package) -> dict:
