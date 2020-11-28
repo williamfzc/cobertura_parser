@@ -27,20 +27,63 @@ from planter import Tree
 from planter import Node
 from planter import Compiler
 from pydantic import BaseModel
+import enum
 
 
 DEFAULT_LINE_NO = -1
 
 
+class DiffStatus(enum.Enum):
+    ADD: str = "ADD"
+    REMOVE: str = "REMOVE"
+    CHANGE: str = "CHANGE"
+
+
+class DiffModify(BaseModel):
+    file_name: str
+    line_list: typing.List[int]
+    pkg: str
+    kls: str
+    method: str
+    status: DiffStatus
+
+
 class _StructureMethod(BaseModel):
+    class _MethodLine(BaseModel):
+        no: int
+        hits: int
+        branch: bool
+        condition: str = None
+
     name: str
     line_start: int = DEFAULT_LINE_NO
     line_end: int = DEFAULT_LINE_NO
     hit_lines: list
     details: dict = None
+    lines: typing.List[_MethodLine] = None
 
     def is_hit(self) -> bool:
         return bool(self.hit_lines)
+
+    def diff_with(self, old: "_StructureMethod" = None) -> list:
+        """ return a int list (modified lines) """
+        # new method or removed method
+        if self.line_start == old.line_start and self.line_end == old.line_end:
+            return []
+        if not old:
+            return list(range(self.line_start, self.line_end))
+        # 2 ranges
+        if self.line_end < old.line_start or self.line_start > old.line_end:
+            return [
+                *range(self.line_start, self.line_end),
+                *range(old.line_start, old.line_end),
+            ]
+        # 1 range
+        return list(
+            range(
+                min(self.line_start, old.line_start), max(self.line_end, old.line_end)
+            )
+        )
 
 
 class _StructureKls(BaseModel):
@@ -55,6 +98,75 @@ class _StructureKls(BaseModel):
 
     def get_hit_map(self) -> list:
         return [each.name for each in self.methods.values() if each.is_hit()]
+
+    def diff_with(
+        self, pkg: "_StructurePackage", old: "_StructureKls" = None
+    ) -> typing.List[DiffModify]:
+        ret = list()
+        if not old:
+            # all the methods are new
+            for method_name, method in self.methods.items():
+                changed_line = list(range(method.line_start, method.line_end))
+                if changed_line:
+                    ret.append(
+                        DiffModify(
+                            file_name=self.file_name,
+                            line_list=changed_line,
+                            pkg=pkg.name,
+                            kls=self.name,
+                            method=method_name,
+                            status=DiffStatus.ADD,
+                        )
+                    )
+            return ret
+        # changed class
+        for method_name, method in self.methods.items():
+            # new method
+            if method_name not in old.methods:
+                changed_line = list(range(method.line_start, method.line_end))
+                if changed_line:
+                    ret.append(
+                        DiffModify(
+                            file_name=self.file_name,
+                            line_list=changed_line,
+                            pkg=pkg.name,
+                            kls=self.name,
+                            method=method_name,
+                            status=DiffStatus.ADD,
+                        )
+                    )
+                continue
+            for old_method_name, old_method in old.methods.items():
+                # changed method
+                if method_name == old_method_name:
+                    changed_line = method.diff_with(old_method)
+                    if changed_line:
+                        ret.append(
+                            DiffModify(
+                                file_name=self.file_name,
+                                line_list=changed_line,
+                                pkg=pkg.name,
+                                kls=self.name,
+                                method=method_name,
+                                status=DiffStatus.CHANGE,
+                            )
+                        )
+                    break
+        # removed method
+        for method_name, method in old.methods.items():
+            if method_name not in self.methods:
+                changed_line = list(range(method.line_start, method.line_end))
+                ret.append(
+                    DiffModify(
+                        file_name=self.file_name,
+                        line_list=changed_line,
+                        pkg=pkg.name,
+                        kls=self.name,
+                        method=method_name,
+                        status=DiffStatus.REMOVE,
+                    )
+                )
+        return ret
 
 
 class _StructurePackage(BaseModel):
@@ -72,6 +184,27 @@ class _StructurePackage(BaseModel):
                 result[kls_name] = hit_map
         return result
 
+    def diff_with(self, old: "_StructurePackage" = None) -> typing.List[DiffModify]:
+        ret = []
+        # new package
+        if not old:
+            for each_kls, kls in self.classes.items():
+                ret += kls.diff_with(self, None)
+            return ret
+        # changed package
+        for kls_name, kls in self.classes.items():
+            # new class
+            if kls_name not in old.classes:
+                ret += kls.diff_with(self, None)
+                continue
+            for old_kls_name, old_kls in old.classes.items():
+                # changed class
+                if kls_name == old_kls_name:
+                    ret += kls.diff_with(self, old_kls)
+                    break
+        # todo: ignore removed classes
+        return ret
+
 
 class CoberturaStructure(BaseModel):
     packages: typing.Dict[str, _StructurePackage]
@@ -83,6 +216,22 @@ class CoberturaStructure(BaseModel):
             if hit_map:
                 result[pkg_name] = hit_map
         return result
+
+    def diff_with(self, old: "CoberturaStructure") -> typing.List[DiffModify]:
+        ret = []
+        for pkg_name, pkg in self.packages.items():
+            # new package
+            if pkg_name not in old.packages:
+                ret += pkg.diff_with(None)
+                continue
+            # changed package
+            for old_pkg_name, old_pkg in old.packages.items():
+                # changed class
+                if pkg_name == old_pkg_name:
+                    ret += pkg.diff_with(old_pkg)
+                    break
+        # todo: ignore removed pkg
+        return ret
 
 
 class _CoberturaObject(Tree):
@@ -176,7 +325,7 @@ class CoberturaParser(object):
     def get_node_attr(node: Node, name: str):
         return getattr(node, f"@{name}")
 
-    def get_structure(self, *_, **__):
+    def get_structure(self, *_, **__) -> dict:
         key_package = "packages"
         key_class = "classes"
         key_method = "methods"
@@ -190,30 +339,45 @@ class CoberturaParser(object):
         key_number = "@number"
         key_hits = "@hits"
         key_lines = "lines"
+        key_condition_coverage = "condition-coverage"
+
+        key_line_no = "no"
+        key_line_hit = "hits"
+        key_line_branch = "branch"
+        key_line_condition = "condition"
 
         def _parse_method(method_tree: _Method):
             details = []
             hit_lines = []
+            lines = []
+
             _result = {
                 key_name: method_tree.get_name(),
                 key_start: DEFAULT_LINE_NO,
                 key_end: DEFAULT_LINE_NO,
                 key_hit_lines: hit_lines,
                 key_details: details,
+                key_lines: lines,
             }
             for each_lines in method_tree.root.sub_nodes:
                 for each_line in each_lines.sub_nodes:
-                    cur_line = getattr(each_line, key_number)
-                    cur_hit = getattr(each_line, key_hits)
+                    cur_line = int(getattr(each_line, key_number))
+                    cur_hit = int(getattr(each_line, key_hits))
+                    cur_branch = bool(getattr(each_line, key_line_branch, False))
+                    cur_condition = getattr(each_line, key_condition_coverage, None)
                     if cur_hit != "0":
                         hit_lines.append(cur_line)
 
                     details.append((cur_line, cur_hit))
+                    lines.append({
+                        key_line_no: cur_line,
+                        key_line_hit: cur_hit,
+                        key_line_branch: cur_branch,
+                        key_line_condition: cur_condition,
+                    })
 
-            if details:
-                _result[key_start], _result[key_end] = int(details[0][0]), int(
-                    details[-1][0]
-                )
+            if lines:
+                _result[key_start], _result[key_end] = lines[0][key_line_no], lines[-1][key_line_no]
             return _result
 
         def _parse_kls(kls_tree: _Class):
