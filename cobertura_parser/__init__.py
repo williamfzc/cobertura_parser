@@ -365,7 +365,8 @@ class CoberturaParser(object):
                     cur_hit = int(getattr(each_line, key_hits))
                     cur_branch = bool(getattr(each_line, key_line_branch, False))
                     cur_condition = getattr(each_line, key_condition_coverage, None)
-                    if cur_hit != "0":
+                    # not zero
+                    if cur_hit:
                         hit_lines.append(cur_line)
 
                     details.append((cur_line, cur_hit))
