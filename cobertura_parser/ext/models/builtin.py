@@ -4,6 +4,7 @@ see http://cobertura.sourceforge.net/xml/coverage-04.dtd
 """
 from pydantic import BaseModel
 import typing
+from cobertura_parser.ext.models.utils import unused_dict_to_list
 
 TYPE_ORIGIN_CONDITIONS = typing.Dict[
     str, typing.Union["CoberturaCondition", typing.List["CoberturaCondition"]]
@@ -55,6 +56,9 @@ class CoberturaLine(BaseModel):
             "condition_coverage": {"alias": "@condition-coverage"},
         }
 
+    def is_hit(self) -> bool:
+        return bool(self.hits)
+
 
 class CoberturaMethod(BaseModel):
     name: str
@@ -79,6 +83,14 @@ class CoberturaMethod(BaseModel):
             "complexity": {"alias": "@complexity"},
         }
 
+    def get_line_list(self) -> typing.List[CoberturaLine]:
+        return unused_dict_to_list(self.lines)
+
+    def is_hit(self) -> bool:
+        for each in self.get_line_list():
+            print(each)
+        return any((each.is_hit() for each in self.get_line_list()))
+
 
 class CoberturaKlass(BaseModel):
     name: str
@@ -100,6 +112,12 @@ class CoberturaKlass(BaseModel):
             "complexity": {"alias": "@complexity"},
         }
 
+    def get_method_list(self) -> typing.List[CoberturaMethod]:
+        return unused_dict_to_list(self.methods)
+
+    def is_hit(self) -> bool:
+        return any((each.is_hit() for each in self.get_method_list()))
+
 
 class CoberturaPackage(BaseModel):
     name: str
@@ -116,6 +134,12 @@ class CoberturaPackage(BaseModel):
             "branch_rate": {"alias": "@branch-rate"},
             "complexity": {"alias": "@complexity"},
         }
+
+    def get_class_list(self) -> typing.List[CoberturaKlass]:
+        return unused_dict_to_list(self.classes)
+
+    def is_hit(self) -> bool:
+        return any((each.is_hit() for each in self.get_class_list()))
 
 
 class CoberturaCoverage(BaseModel):
@@ -146,6 +170,9 @@ class CoberturaCoverage(BaseModel):
             "version": {"alias": "@version"},
             "timestamp": {"alias": "@timestamp"},
         }
+
+    def get_package_list(self) -> typing.List[CoberturaPackage]:
+        return unused_dict_to_list(self.packages)
 
 
 class CoberturaStructure(BaseModel):
