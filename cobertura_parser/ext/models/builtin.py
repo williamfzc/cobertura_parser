@@ -1,12 +1,50 @@
+"""
+these models have same structure as origin cobertura dtd
+see http://cobertura.sourceforge.net/xml/coverage-04.dtd
+"""
 from pydantic import BaseModel
 import typing
+
+TYPE_ORIGIN_CONDITIONS = typing.Dict[
+    str, typing.Union["CoberturaCondition", typing.List["CoberturaCondition"]]
+]
+
+TYPE_ORIGIN_LINES = typing.Optional[
+    typing.Dict[str, typing.Union["CoberturaLine", typing.List["CoberturaLine"]]]
+]
+TYPE_ORIGIN_METHODS = typing.Optional[
+    typing.Dict[str, typing.Union["CoberturaMethod", typing.List["CoberturaMethod"]]]
+]
+TYPE_ORIGIN_KLASSES = typing.Dict[
+    str, typing.Union["CoberturaKlass", typing.List["CoberturaKlass"]]
+]
+TYPE_ORIGIN_PACKAGES = typing.Dict[
+    str, typing.Union["CoberturaPackage", typing.List["CoberturaPackage"]]
+]
+
+
+class CoberturaCondition(BaseModel):
+    number: int
+    type: str
+    coverage: str
+
+    class Config:
+        allow_population_by_field_name = True
+        fields = {
+            "number": {"alias": "@number"},
+            "type": {"alias": "@type"},
+            "coverage": {"alias": "@coverage"},
+        }
 
 
 class CoberturaLine(BaseModel):
     number: int
     hits: int
-    branch: bool = False
+    # can not be `bool` because it can not be cast to xml format back
+    branch: str
     condition_coverage: str = None
+
+    conditions: TYPE_ORIGIN_CONDITIONS = None
 
     class Config:
         allow_population_by_field_name = True
@@ -29,7 +67,7 @@ class CoberturaMethod(BaseModel):
     # - None
     # - Dict (only one element
     # - List (more than one
-    lines: typing.Dict[str, typing.Union[CoberturaLine, typing.List[CoberturaLine]]] = None
+    lines: TYPE_ORIGIN_LINES = dict()
 
     class Config:
         allow_population_by_field_name = True
@@ -49,9 +87,8 @@ class CoberturaKlass(BaseModel):
     branch_rate: float
     complexity: float = None
 
-    methods: typing.Dict[
-        str, typing.Union[CoberturaMethod, typing.List[CoberturaMethod]]
-    ] = None
+    methods: TYPE_ORIGIN_METHODS = dict()
+    lines: TYPE_ORIGIN_LINES = dict()
 
     class Config:
         allow_population_by_field_name = True
@@ -69,7 +106,7 @@ class CoberturaPackage(BaseModel):
     line_rate: float
     branch_rate: float
     complexity: float = None
-    classes: typing.Dict[str, typing.Union[CoberturaKlass, typing.List[CoberturaKlass]]] = None
+    classes: TYPE_ORIGIN_KLASSES = None
 
     class Config:
         allow_population_by_field_name = True
@@ -83,7 +120,7 @@ class CoberturaPackage(BaseModel):
 
 class CoberturaCoverage(BaseModel):
     sources: typing.Dict[str, typing.Union[str, typing.List[str]]] = None
-    packages: typing.Dict[str, typing.Union[CoberturaPackage, typing.List[CoberturaPackage]]]
+    packages: TYPE_ORIGIN_PACKAGES
 
     # attrs
     line_rate: float
