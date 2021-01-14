@@ -6,7 +6,7 @@ from cobertura_parser.ext.models.builtin import (
     CoberturaPackage,
     CoberturaLine,
     CoberturaStructureSlim,
-    CoberturaStructure
+    CoberturaStructure,
 )
 
 

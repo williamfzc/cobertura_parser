@@ -1,4 +1,8 @@
-from cobertura_parser.ext.models.builtin import CoberturaStructure
+import typing
+from cobertura_parser.ext.models.builtin import (
+    CoberturaStructure,
+    CoberturaStructureSlim,
+)
 from cobertura_parser.ext.models.snapshot import CodeSnapshot
 from cobertura_parser.ext.models.coverage import Coverage
 
@@ -10,9 +14,17 @@ class CoberturaProcessor(object):
     """
 
     @classmethod
-    def get_code_snapshot(cls, data: CoberturaStructure) -> CodeSnapshot:
-        return CodeSnapshot.from_normal(data)
+    def get_code_snapshot(
+        cls, data: typing.Union[CoberturaStructure, CoberturaStructureSlim]
+    ) -> CodeSnapshot:
+        if isinstance(data, CoberturaStructure):
+            return CodeSnapshot.from_normal(data)
+        return CodeSnapshot.from_slim(data)
 
     @classmethod
-    def get_coverage(cls, data: CoberturaStructure) -> Coverage:
-        return Coverage(**data.coverage.dict())
+    def get_coverage(
+        cls, data: typing.Union[CoberturaStructure, CoberturaStructureSlim]
+    ) -> Coverage:
+        if isinstance(data, CoberturaStructure):
+            return Coverage.from_normal(data)
+        return Coverage.from_slim(data)

@@ -1,7 +1,6 @@
 from cobertura_parser.ext.loader import CoberturaLoader
 from cobertura_parser.ext.models.builtin import (
     CoberturaStructure,
-    CoberturaCoverage,
     CoberturaStructureSlim,
 )
 from cobertura_parser.ext.models.snapshot import CodeSnapshot
@@ -36,17 +35,17 @@ def test_snapshot():
 
 
 def test_coverage():
-    def _all_method_hit(c: CoberturaCoverage):
-        for each_pkg in c.get_package_list():
-            for each_kls in each_pkg.get_class_list():
-                for each_method in each_kls.get_method_list():
+    def _all_method_hit(c: CoberturaStructureSlim):
+        for each_pkg in c.packages:
+            for each_kls in each_pkg.classes:
+                for each_method in each_kls.methods:
                     if not each_method.is_hit():
                         return False
         return True
 
     r = CoberturaLoader.from_file(DATA_FILE)
-    before = CoberturaStructure(**r)
-    assert not _all_method_hit(before.coverage)
+    before = CoberturaStructure(**r).slim()
+    assert not _all_method_hit(before)
     after = CoberturaProcessor.get_coverage(before)
     assert _all_method_hit(after)
 

@@ -85,9 +85,6 @@ class CoberturaMethod(BaseModel):
     def get_line_list(self) -> typing.List[CoberturaLine]:
         return unused_dict_to_list(self.lines)
 
-    def is_hit(self) -> bool:
-        return any((each.is_hit() for each in self.get_line_list()))
-
 
 class CoberturaKlass(BaseModel):
     name: str
@@ -115,9 +112,6 @@ class CoberturaKlass(BaseModel):
     def get_line_list(self) -> typing.List[CoberturaLine]:
         return unused_dict_to_list(self.lines)
 
-    def is_hit(self) -> bool:
-        return any((each.is_hit() for each in self.get_method_list()))
-
 
 class CoberturaPackage(BaseModel):
     name: str
@@ -137,9 +131,6 @@ class CoberturaPackage(BaseModel):
 
     def get_class_list(self) -> typing.List[CoberturaKlass]:
         return unused_dict_to_list(self.classes)
-
-    def is_hit(self) -> bool:
-        return any((each.is_hit() for each in self.get_class_list()))
 
 
 class CoberturaCoverage(BaseModel):
@@ -194,18 +185,42 @@ class CoberturaLineSlim(CoberturaLine):
 class CoberturaMethodSlim(CoberturaMethod):
     lines: typing.List[CoberturaLine] = None
 
+    def get_line_list(self) -> typing.List[CoberturaLine]:
+        raise NotImplementedError
+
+    def is_hit(self) -> bool:
+        return any((each.is_hit() for each in self.lines))
+
 
 class CoberturaKlassSlim(CoberturaKlass):
     methods: typing.List[CoberturaMethodSlim] = None
     lines: typing.List[CoberturaLineSlim] = None
 
+    def get_method_list(self) -> typing.List[CoberturaMethod]:
+        raise NotImplementedError
+
+    def get_line_list(self) -> typing.List[CoberturaLine]:
+        raise NotImplementedError
+
+    def is_hit(self) -> bool:
+        return any((each.is_hit() for each in self.methods))
+
 
 class CoberturaPackageSlim(CoberturaPackage):
     classes: typing.List[CoberturaKlassSlim] = None
 
+    def get_class_list(self) -> typing.List[CoberturaKlass]:
+        raise NotImplementedError
+
+    def is_hit(self) -> bool:
+        return any((each.is_hit() for each in self.classes))
+
 
 class CoberturaStructureSlim(CoberturaCoverage):
     packages: typing.List[CoberturaPackageSlim]
+
+    def get_package_list(self) -> typing.List[CoberturaPackage]:
+        raise NotImplementedError
 
 
 class CoberturaStructure(BaseModel):
