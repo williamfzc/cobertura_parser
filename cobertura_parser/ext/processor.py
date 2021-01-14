@@ -15,4 +15,4 @@ class CoberturaProcessor(object):
 
     @classmethod
     def get_coverage(cls, data: CoberturaStructure) -> Coverage:
-        pass
+        return Coverage(**data.coverage.dict())

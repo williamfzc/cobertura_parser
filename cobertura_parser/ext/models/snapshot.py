@@ -37,6 +37,8 @@ class CodeSnapshotPackage(CoberturaPackage):
 
 
 class CodeSnapshot(BaseModel):
+    """ snapshot does not need other attrs, so inherits from BaseModel """
+
     sources: typing.Dict[str, typing.Union[str, typing.List[str]]] = None
     packages: typing.Dict[
         str, typing.Union[CodeSnapshotPackage, typing.List[CodeSnapshotPackage]]

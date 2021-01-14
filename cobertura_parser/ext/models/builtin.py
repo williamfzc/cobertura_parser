@@ -9,7 +9,6 @@ from cobertura_parser.ext.models.utils import unused_dict_to_list
 TYPE_ORIGIN_CONDITIONS = typing.Dict[
     str, typing.Union["CoberturaCondition", typing.List["CoberturaCondition"]]
 ]
-
 TYPE_ORIGIN_LINES = typing.Optional[
     typing.Dict[str, typing.Union["CoberturaLine", typing.List["CoberturaLine"]]]
 ]
@@ -84,11 +83,10 @@ class CoberturaMethod(BaseModel):
         }
 
     def get_line_list(self) -> typing.List[CoberturaLine]:
+        print(unused_dict_to_list(self.lines))
         return unused_dict_to_list(self.lines)
 
     def is_hit(self) -> bool:
-        for each in self.get_line_list():
-            print(each)
         return any((each.is_hit() for each in self.get_line_list()))
 
 
@@ -115,6 +113,9 @@ class CoberturaKlass(BaseModel):
     def get_method_list(self) -> typing.List[CoberturaMethod]:
         return unused_dict_to_list(self.methods)
 
+    def get_line_list(self) -> typing.List[CoberturaLine]:
+        return unused_dict_to_list(self.lines)
+
     def is_hit(self) -> bool:
         return any((each.is_hit() for each in self.get_method_list()))
 
@@ -124,7 +125,7 @@ class CoberturaPackage(BaseModel):
     line_rate: float
     branch_rate: float
     complexity: float = None
-    classes: TYPE_ORIGIN_KLASSES = None
+    classes: TYPE_ORIGIN_KLASSES = dict()
 
     class Config:
         allow_population_by_field_name = True
@@ -175,5 +176,38 @@ class CoberturaCoverage(BaseModel):
         return unused_dict_to_list(self.packages)
 
 
+class CoberturaLineSlim(CoberturaLine):
+    pass
+
+
+class CoberturaMethodSlim(CoberturaMethod):
+    lines: typing.List[CoberturaLine] = None
+
+
+class CoberturaKlassSlim(CoberturaKlass):
+    methods: typing.List[CoberturaMethodSlim] = None
+    lines: typing.List[CoberturaLineSlim] = None
+
+
+class CoberturaPackageSlim(CoberturaPackage):
+    classes: typing.List[CoberturaKlassSlim] = None
+
+
+class CoberturaStructureSlim(CoberturaCoverage):
+    packages: typing.List[CoberturaPackageSlim]
+
+
 class CoberturaStructure(BaseModel):
     coverage: CoberturaCoverage
+
+    def slim(self) -> CoberturaStructureSlim:
+        data = CoberturaCoverage(**self.coverage.dict())
+        for each_pkg in data.get_package_list():
+            for each_kls in each_pkg.get_class_list():
+                for each_method in each_kls.get_method_list():
+                    each_method.lines = each_method.get_line_list()
+                each_kls.methods = each_kls.get_method_list()
+                each_kls.lines = each_kls.get_line_list()
+            each_pkg.classes = each_pkg.get_class_list()
+        data.packages = data.get_package_list()
+        return CoberturaStructureSlim(**data.dict())

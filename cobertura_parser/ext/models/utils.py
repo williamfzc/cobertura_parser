@@ -1,4 +1,4 @@
-def unused_dict_to_list(cb_dict: dict):
+def unused_dict_to_list(cb_dict: dict) -> list:
     if not cb_dict:
         return []
     # by default, xml parser will create a dict, which only contains one element
