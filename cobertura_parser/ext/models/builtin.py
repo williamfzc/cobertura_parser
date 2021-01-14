@@ -226,5 +226,8 @@ class CoberturaStructureSlim(CoberturaCoverage):
 class CoberturaStructure(BaseModel):
     coverage: CoberturaCoverage
 
+    def to_origin(self) -> dict:
+        return self.dict(by_alias=True, exclude_defaults=True)
+
     def slim(self) -> CoberturaStructureSlim:
         return self.coverage.slim()

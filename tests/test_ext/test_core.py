@@ -15,22 +15,21 @@ DATA_FILE = pathlib.Path(__file__).parent.parent / "data" / "cobertura.xml"
 def test_loader_roundtripping():
     with open(DATA_FILE) as f:
         before = f.read()
-    after = xmltodict.unparse(CoberturaLoader.from_str(before))
+    after = xmltodict.unparse(CoberturaLoader.from_str(before, to_dict=True))
     assert xmltodict.parse(before) == xmltodict.parse(after)
 
 
 def test_loader_model_roundtripping():
     with open(DATA_FILE) as f:
         origin = f.read()
-    before = CoberturaLoader.from_str(origin)
-    after = CoberturaStructure(**before).dict(by_alias=True, exclude_defaults=True)
+    before = CoberturaLoader.from_str(origin, to_dict=True)
+    after = CoberturaStructure(**before).to_origin()
     assert xmltodict.unparse(before) == xmltodict.unparse(after)
 
 
 def test_snapshot():
     r = CoberturaLoader.from_file(DATA_FILE)
-    s = CoberturaStructure(**r)
-    snapshot = CoberturaProcessor.get_code_snapshot(s)
+    snapshot = CoberturaProcessor.get_code_snapshot(r)
     assert isinstance(snapshot, CodeSnapshot)
 
 
@@ -44,7 +43,7 @@ def test_coverage():
         return True
 
     r = CoberturaLoader.from_file(DATA_FILE)
-    before = CoberturaStructure(**r).slim()
+    before = r.slim()
     assert not _all_method_hit(before)
     after = CoberturaProcessor.get_coverage(before)
     assert _all_method_hit(after)
@@ -52,8 +51,7 @@ def test_coverage():
 
 def test_slim():
     r = CoberturaLoader.from_file(DATA_FILE)
-    s = CoberturaStructure(**r)
-    slim = s.slim()
-    sub_slim = s.coverage.slim()
+    slim = r.slim()
+    sub_slim = r.coverage.slim()
     assert isinstance(slim, CoberturaStructureSlim)
     assert slim.json() == sub_slim.json()

@@ -8,7 +8,7 @@ DATA_FILE = pathlib.Path(__file__).parent.parent / "data" / "cobertura.xml"
 
 def test_builtin_model_api_hit():
     d = CoberturaLoader.from_file(DATA_FILE)
-    s = CoberturaStructure(**d).slim()
+    s = d.slim()
     some_kls_not_hit = False
     for each in s.packages:
         assert each.is_hit()
