@@ -31,7 +31,8 @@ def test_loader_model_roundtripping():
 def test_snapshot():
     r = CoberturaLoader.from_file(DATA_FILE)
     s = CoberturaStructure(**r)
-    assert isinstance(CoberturaProcessor.get_code_snapshot(s), CodeSnapshot)
+    snapshot = CoberturaProcessor.get_code_snapshot(s)
+    assert isinstance(snapshot, CodeSnapshot)
 
 
 def test_coverage():

@@ -83,7 +83,6 @@ class CoberturaMethod(BaseModel):
         }
 
     def get_line_list(self) -> typing.List[CoberturaLine]:
-        print(unused_dict_to_list(self.lines))
         return unused_dict_to_list(self.lines)
 
     def is_hit(self) -> bool:

@@ -11,7 +11,7 @@ class CoberturaProcessor(object):
 
     @classmethod
     def get_code_snapshot(cls, data: CoberturaStructure) -> CodeSnapshot:
-        return CodeSnapshot(**data.coverage.dict())
+        return CodeSnapshot.from_normal(data)
 
     @classmethod
     def get_coverage(cls, data: CoberturaStructure) -> Coverage:

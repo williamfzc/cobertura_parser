@@ -5,41 +5,44 @@ from cobertura_parser.ext.models.builtin import (
     CoberturaKlass,
     CoberturaPackage,
     CoberturaLine,
-    TYPE_ORIGIN_LINES,
+    CoberturaStructureSlim,
+    CoberturaStructure
 )
 
 
 class CodeSnapshotMethod(CoberturaMethod):
-    _TYPE_LINE_FINAL = typing.Union[typing.List[int], TYPE_ORIGIN_LINES]
+    _TYPE_LINE_FINAL = typing.Union[typing.List[int], typing.List[CoberturaLine]]
     lines: _TYPE_LINE_FINAL = None
 
     @validator("lines")
-    def line2int(cls, lines: TYPE_ORIGIN_LINES = None):
-        if not lines:
-            return []
-        # `lines` dict will only have one element
-        lines = lines["line"]
-        if isinstance(lines, CoberturaLine):
-            return [lines.number]
+    def line2int(cls, lines: typing.List[CoberturaLine]):
         return [each.number for each in lines]
 
 
 class CodeSnapshotKlass(CoberturaKlass):
-    methods: typing.Dict[
-        str, typing.Union[CodeSnapshotMethod, typing.List[CodeSnapshotMethod]]
-    ] = None
+    _TYPE_LINE_FINAL = typing.Union[typing.List[int], typing.List[CoberturaLine]]
+    lines: _TYPE_LINE_FINAL = None
+    methods: typing.List[CodeSnapshotMethod]
+
+    @validator("lines")
+    def line2int(cls, lines: typing.List[CoberturaLine]):
+        return [each.number for each in lines]
 
 
 class CodeSnapshotPackage(CoberturaPackage):
-    classes: typing.Dict[
-        str, typing.Union[CodeSnapshotKlass, typing.List[CodeSnapshotKlass]]
-    ] = None
+    classes: typing.List[CodeSnapshotKlass]
 
 
 class CodeSnapshot(BaseModel):
     """ snapshot does not need other attrs, so inherits from BaseModel """
 
     sources: typing.Dict[str, typing.Union[str, typing.List[str]]] = None
-    packages: typing.Dict[
-        str, typing.Union[CodeSnapshotPackage, typing.List[CodeSnapshotPackage]]
-    ]
+    packages: typing.List[CodeSnapshotPackage]
+
+    @classmethod
+    def from_slim(cls, slim_data: CoberturaStructureSlim) -> "CodeSnapshot":
+        return cls(**slim_data.dict())
+
+    @classmethod
+    def from_normal(cls, data: CoberturaStructure) -> "CodeSnapshot":
+        return cls.from_slim(data.slim())
