@@ -1,9 +1,8 @@
-from cobertura_parser.ext.loader import CoberturaLoader
-from cobertura_parser.ext.models.builtin import CoberturaStructure
+from cobertura_parser.loader import CoberturaLoader
 import pathlib
 
 
-DATA_FILE = pathlib.Path(__file__).parent.parent / "data" / "cobertura.xml"
+DATA_FILE = pathlib.Path(__file__).parent / "data" / "cobertura.xml"
 
 
 def test_builtin_model_api_hit():

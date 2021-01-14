@@ -1,10 +1,10 @@
 import typing
-from cobertura_parser.ext.models.builtin import (
+from cobertura_parser.models.builtin import (
     CoberturaStructure,
     CoberturaStructureSlim,
 )
-from cobertura_parser.ext.models.snapshot import CodeSnapshot
-from cobertura_parser.ext.models.coverage import Coverage
+from cobertura_parser.models.snapshot import CodeSnapshot
+from cobertura_parser.models.coverage import Coverage
 
 
 class CoberturaProcessor(object):

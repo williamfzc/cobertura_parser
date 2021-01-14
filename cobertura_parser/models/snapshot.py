@@ -1,6 +1,6 @@
 import typing
 from pydantic import BaseModel, validator
-from cobertura_parser.ext.models.builtin import (
+from cobertura_parser.models.builtin import (
     CoberturaMethod,
     CoberturaKlass,
     CoberturaPackage,

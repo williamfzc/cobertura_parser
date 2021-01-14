@@ -2,7 +2,7 @@ import typing
 import pathlib
 import xmltodict
 
-from cobertura_parser.ext.models.builtin import CoberturaStructure
+from cobertura_parser.models.builtin import CoberturaStructure
 
 
 class CoberturaLoader(object):

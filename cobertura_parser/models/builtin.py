@@ -4,7 +4,7 @@ see http://cobertura.sourceforge.net/xml/coverage-04.dtd
 """
 from pydantic import BaseModel
 import typing
-from cobertura_parser.ext.models.utils import unused_dict_to_list
+from cobertura_parser.utils import unused_dict_to_list
 
 TYPE_ORIGIN_CONDITIONS = typing.Dict[
     str, typing.Union["CoberturaCondition", typing.List["CoberturaCondition"]]
