@@ -54,4 +54,6 @@ def test_slim():
     r = CoberturaLoader.from_file(DATA_FILE)
     s = CoberturaStructure(**r)
     slim = s.slim()
+    sub_slim = s.coverage.slim()
     assert isinstance(slim, CoberturaStructureSlim)
+    assert slim.json() == sub_slim.json()
