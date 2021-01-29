@@ -58,6 +58,10 @@ class CoberturaLine(BaseModel):
     def is_hit(self) -> bool:
         return bool(self.hits)
 
+    def is_in_branch(self) -> bool:
+        # todo: is it correct??
+        return self.branch == "true"
+
 
 class CoberturaMethod(BaseModel):
     name: str

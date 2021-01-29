@@ -9,26 +9,35 @@ class TerminalCli(object):
     def cov(self, from_file: str, to_file: str):
         structure: CoberturaStructure = CoberturaLoader.from_file(from_file)
         result = CoberturaProcessor.get_coverage(structure)
+        result.lazy_calc()
         with open(to_file, "w") as f:
-            f.write(result.json(exclude={
-                "sources": ...,
-                "line_rate": ...,
-                "branch_rate": ...,
-                "line_covered": ...,
-                "line_valid": ...,
-                "branches_covered": ...,
-                "branches_valid": ...,
-                "complexity": ...,
-                "version": ...,
-                "packages": {
-                    "__all__": {
-                        "classes": {
+            f.write(
+                result.json(
+                    exclude={
+                        "sources": ...,
+                        "line_rate": ...,
+                        "branch_rate": ...,
+                        "line_covered": ...,
+                        "line_valid": ...,
+                        "branches_covered": ...,
+                        "branches_valid": ...,
+                        "complexity": ...,
+                        "version": ...,
+                        "packages": {
                             "__all__": {
-                                "methods": {
+                                "classes": {
                                     "__all__": {
-                                        "branch_rate",
-                                        "line_rate",
-                                        "complexity",
+                                        "methods": {
+                                            "__all__": {
+                                                "branch_rate",
+                                                "line_rate",
+                                                "complexity",
+                                            }
+                                        },
+                                        "branch_rate": ...,
+                                        "line_rate": ...,
+                                        "complexity": ...,
+                                        "lines": ...,
                                     }
                                 },
                                 "branch_rate": ...,
@@ -36,12 +45,9 @@ class TerminalCli(object):
                                 "complexity": ...,
                             }
                         },
-                        "branch_rate": ...,
-                        "line_rate": ...,
-                        "complexity": ...,
                     }
-                }
-            }))
+                )
+            )
 
 
 def main():
