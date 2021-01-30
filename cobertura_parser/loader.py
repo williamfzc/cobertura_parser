@@ -3,6 +3,7 @@ import pathlib
 import xmltodict
 
 from cobertura_parser.models.builtin import CoberturaStructure
+from cobertura_parser.ext.jacoco import jacoco2cobertura
 
 
 class CoberturaLoader(object):
@@ -26,3 +27,9 @@ class CoberturaLoader(object):
         if to_dict:
             return d
         return CoberturaStructure(**d)
+
+    @classmethod
+    def from_jacoco_file(
+        cls, file_path: typing.Union[str, pathlib.Path], *args, **kwargs
+    ):
+        return cls.from_str(jacoco2cobertura(file_path), *args, **kwargs)

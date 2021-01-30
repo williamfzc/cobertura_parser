@@ -6,48 +6,54 @@ from cobertura_parser.processor import CoberturaProcessor
 
 
 class TerminalCli(object):
-    def cov(self, from_file: str, to_file: str):
-        structure: CoberturaStructure = CoberturaLoader.from_file(from_file)
+    def _cov(self, structure: CoberturaStructure) -> str:
         result = CoberturaProcessor.get_coverage(structure)
         result.lazy_calc()
-        with open(to_file, "w") as f:
-            f.write(
-                result.json(
-                    exclude={
-                        "sources": ...,
-                        "line_rate": ...,
-                        "branch_rate": ...,
-                        "line_covered": ...,
-                        "line_valid": ...,
-                        "branches_covered": ...,
-                        "branches_valid": ...,
-                        "complexity": ...,
-                        "version": ...,
-                        "packages": {
+        return result.json(
+            exclude={
+                "sources": ...,
+                "line_rate": ...,
+                "branch_rate": ...,
+                "line_covered": ...,
+                "line_valid": ...,
+                "branches_covered": ...,
+                "branches_valid": ...,
+                "complexity": ...,
+                "version": ...,
+                "packages": {
+                    "__all__": {
+                        "classes": {
                             "__all__": {
-                                "classes": {
+                                "methods": {
                                     "__all__": {
-                                        "methods": {
-                                            "__all__": {
-                                                "branch_rate",
-                                                "line_rate",
-                                                "complexity",
-                                            }
-                                        },
-                                        "branch_rate": ...,
-                                        "line_rate": ...,
-                                        "complexity": ...,
-                                        "lines": ...,
+                                        "branch_rate",
+                                        "line_rate",
+                                        "complexity",
                                     }
                                 },
                                 "branch_rate": ...,
                                 "line_rate": ...,
                                 "complexity": ...,
+                                "lines": ...,
                             }
                         },
+                        "branch_rate": ...,
+                        "line_rate": ...,
+                        "complexity": ...,
                     }
-                )
-            )
+                },
+            }
+        )
+
+    def cov(self, from_file: str, to_file: str):
+        structure: CoberturaStructure = CoberturaLoader.from_file(from_file)
+        with open(to_file, "w") as f:
+            f.write(self._cov(structure))
+
+    def cov_from_jacoco(self, from_file: str, to_file: str):
+        structure: CoberturaStructure = CoberturaLoader.from_jacoco_file(from_file)
+        with open(to_file, "w") as f:
+            f.write(self._cov(structure))
 
 
 def main():
