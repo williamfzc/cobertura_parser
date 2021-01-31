@@ -150,7 +150,7 @@ class CoberturaCoverage(BaseModel):
     branches_valid: int = None
     complexity: float = None
     version: float = -1.0
-    timestamp: int = -1
+    timestamp: float = -1.0
 
     class Config:
         allow_population_by_field_name = True
