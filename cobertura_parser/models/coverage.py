@@ -45,7 +45,7 @@ class CoveragePackage(CoberturaPackageSlim):
 
 
 class Coverage(CoberturaStructureSlim):
-    packages: typing.List[CoveragePackage]
+    packages: typing.List[CoveragePackage] = None
 
     @validator("packages")
     def remove_no_hit_package(cls, packages: typing.List[CoveragePackage]):

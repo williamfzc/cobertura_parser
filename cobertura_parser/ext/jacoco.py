@@ -140,7 +140,11 @@ def convert_package(j_package):
 
 
 def convert_root(source, target):
-    target.set("timestamp", str(int(source.find("sessioninfo").attrib["start"]) / 1000))
+    try:
+        ts = int(source.find("sessioninfo").attrib["start"]) / 1000
+    except AttributeError:
+        ts = -1
+    target.set("timestamp", str(ts))
 
     packages = ET.SubElement(target, "packages")
     for package in source.findall("package"):

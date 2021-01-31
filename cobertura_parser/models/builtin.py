@@ -139,7 +139,7 @@ class CoberturaPackage(BaseModel):
 
 class CoberturaCoverage(BaseModel):
     sources: typing.Dict[str, typing.Union[str, typing.List[str]]] = None
-    packages: TYPE_ORIGIN_PACKAGES
+    packages: TYPE_ORIGIN_PACKAGES = None
 
     # attrs
     line_rate: float
@@ -149,8 +149,8 @@ class CoberturaCoverage(BaseModel):
     branches_covered: int = None
     branches_valid: int = None
     complexity: float = None
-    version: float
-    timestamp: int
+    version: float = -1.0
+    timestamp: int = -1
 
     class Config:
         allow_population_by_field_name = True
@@ -221,7 +221,7 @@ class CoberturaPackageSlim(CoberturaPackage):
 
 
 class CoberturaStructureSlim(CoberturaCoverage):
-    packages: typing.List[CoberturaPackageSlim]
+    packages: typing.List[CoberturaPackageSlim] = None
 
     def get_package_list(self) -> typing.List[CoberturaPackage]:
         raise NotImplementedError
