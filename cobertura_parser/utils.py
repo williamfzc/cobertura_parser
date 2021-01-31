@@ -1,3 +1,15 @@
+from contextlib import contextmanager
+import time
+
+
+@contextmanager
+def time_measure(name: str, enable: bool = None):
+    start = time.time()
+    yield
+    if enable:
+        print(f"name: {name}, cost: {time.time() - start}")
+
+
 def unused_dict_to_list(cb_dict: dict) -> list:
     if not cb_dict:
         return []
