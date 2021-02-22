@@ -47,6 +47,45 @@ class TerminalCli(object):
             }
         )
 
+    def _snapshot(self, structure: CoberturaStructure) -> str:
+        result = CoberturaProcessor.get_code_snapshot_fat(structure)
+        return result.json(
+            exclude={
+                "data": {
+                    "sources": ...,
+                    "line_rate": ...,
+                    "branch_rate": ...,
+                    "line_covered": ...,
+                    "line_valid": ...,
+                    "branches_covered": ...,
+                    "branches_valid": ...,
+                    "complexity": ...,
+                    "version": ...,
+                    "packages": {
+                        "__all__": {
+                            "classes": {
+                                "__all__": {
+                                    "methods": {
+                                        "__all__": {
+                                            "branch_rate",
+                                            "line_rate",
+                                            "complexity",
+                                        }
+                                    },
+                                    "branch_rate": ...,
+                                    "line_rate": ...,
+                                    "complexity": ...,
+                                }
+                            },
+                            "branch_rate": ...,
+                            "line_rate": ...,
+                            "complexity": ...,
+                        }
+                    },
+                }
+            }
+        )
+
     def cov(self, from_file: str, to_file: str, dev: bool = None):
         with time_measure("cov", dev):
             structure: CoberturaStructure = CoberturaLoader.from_file(from_file)
@@ -58,6 +97,18 @@ class TerminalCli(object):
             structure: CoberturaStructure = CoberturaLoader.from_jacoco_file(from_file)
             with open(to_file, "w") as f:
                 f.write(self._cov(structure))
+
+    def snapshot(self, from_file: str, to_file: str, dev: bool = None):
+        with time_measure("snapshot", dev):
+            structure: CoberturaStructure = CoberturaLoader.from_file(from_file)
+            with open(to_file, "w") as f:
+                f.write(self._snapshot(structure))
+
+    def snapshot_from_jacoco(self, from_file: str, to_file: str, dev: bool = None):
+        with time_measure("snapshot_from_jacoco", dev):
+            structure: CoberturaStructure = CoberturaLoader.from_jacoco_file(from_file)
+            with open(to_file, "w") as f:
+                f.write(self._snapshot(structure))
 
     def xml_from_jacoco(self, from_file: str, to_file: str, dev: bool = None):
         with time_measure("xml_from_jacoco", dev):
