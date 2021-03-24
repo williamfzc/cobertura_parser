@@ -1,4 +1,5 @@
 import fire
+import json
 
 from cobertura_parser.loader import CoberturaLoader
 from cobertura_parser.models.builtin import CoberturaStructure
@@ -114,6 +115,14 @@ class TerminalCli(object):
         with time_measure("xml_from_jacoco", dev):
             with open(to_file, "w") as f:
                 f.write(jacoco2cobertura(from_file))
+
+    def xml_from_jacoco_to_json(self, from_file: str, to_file: str, dev: bool = None):
+        with time_measure("xml_from_jacoco_to_json", dev):
+            json_content: dict = CoberturaLoader.from_str(
+                jacoco2cobertura(from_file), to_dict=True
+            )
+            with open(to_file, "w") as f:
+                f.write(json.dumps(json_content))
 
 
 def main():
