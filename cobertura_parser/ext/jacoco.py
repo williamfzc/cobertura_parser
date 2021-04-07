@@ -64,9 +64,13 @@ def convert_lines(j_lines, into):
             cline.set("branch", "false")
 
 
-def guess_filename(path_to_class):
+def guess_filename(path_to_class, src_file_name):
+    if src_file_name.endswith(".kt"):
+        suffix = ".kt"
+    else:
+        suffix = ".java"
     m = re.match("([^$]*)", path_to_class)
-    return (m.group(1) if m else path_to_class) + ".java"
+    return (m.group(1) if m else path_to_class) + suffix
 
 
 def add_counters(source, target):
@@ -110,7 +114,7 @@ def convert_method(j_method, j_lines):
 def convert_class(j_class, j_package):
     c_class = ET.Element("class")
     c_class.set("name", j_class.attrib["name"].replace("/", "."))
-    c_class.set("filename", guess_filename(j_class.attrib["name"]))
+    c_class.set("filename", guess_filename(j_class.attrib["name"], j_class.attrib["sourcefilename"]))
 
     all_j_lines = list(find_lines(j_package, c_class.attrib["filename"]))
 
