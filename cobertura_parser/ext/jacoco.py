@@ -10,7 +10,7 @@ def find_lines(j_package, filename):
     lines = list()
     sourcefiles = j_package.findall("sourcefile")
     for sourcefile in sourcefiles:
-        if sourcefile.attrib.get("name").split(".")[0] in os.path.basename(filename):
+        if sourcefile.attrib.get("name").split(".")[0] == os.path.basename(filename).split(".")[0]:
             lines = lines + sourcefile.findall("line")
     return lines
 
