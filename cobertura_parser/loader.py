@@ -25,7 +25,9 @@ class CoberturaLoader(object):
     def from_str(
         cls, xml_content: str, to_dict: bool = None
     ) -> typing.Union[CoberturaStructure, dict]:
-        d = xmltodict.parse(gzip.GzipFile(fileobj=io.BytesIO(gzip.compress(xml_content.encode()))))
+        d = xmltodict.parse(
+            gzip.GzipFile(fileobj=io.BytesIO(gzip.compress(xml_content.encode())))
+        )
         if to_dict:
             return d
         return CoberturaStructure(**d)

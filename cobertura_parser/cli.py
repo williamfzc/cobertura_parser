@@ -1,6 +1,7 @@
 import fire
 import json
 
+from cobertura_parser.ext.lcov import lcov2cobertura
 from cobertura_parser.loader import CoberturaLoader
 from cobertura_parser.models.builtin import CoberturaStructure
 from cobertura_parser.processor import CoberturaProcessor
@@ -121,6 +122,15 @@ class TerminalCli(object):
             json_content: dict = CoberturaLoader.from_str(
                 jacoco2cobertura(from_file), to_dict=True
             )
+            with open(to_file, "w") as f:
+                f.write(json.dumps(json_content))
+
+    def data_from_lcov_to_json(self, from_file: str, to_file: str, dev: bool = None):
+        with time_measure("data_from_lcov_to_json", dev):
+            with open(from_file) as f:
+                json_content: dict = CoberturaLoader.from_str(
+                    lcov2cobertura(f.read()), to_dict=True
+                )
             with open(to_file, "w") as f:
                 f.write(json.dumps(json_content))
 
