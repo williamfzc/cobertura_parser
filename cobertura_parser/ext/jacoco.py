@@ -11,7 +11,6 @@ def find_lines(j_package, filename):
     for sourcefile in sourcefiles:
         if sourcefile.attrib.get("name").split(".")[0] == os.path.basename(filename).split(".")[0]:
             lines = lines + sourcefile.findall("line")
-    destroy_trees(sourcefiles)
     return lines
 
 
@@ -120,15 +119,18 @@ def convert_class(j_class, j_package):
 
     c_methods = ET.SubElement(c_class, "methods")
     all_j_methods = list(j_class.findall("method"))
+    str_list = []
     for j_method in all_j_methods:
         j_method_lines = method_lines(j_method, all_j_methods, all_j_lines)
-        c_methods.append(convert_method(j_method, j_method_lines))
+        each_node = convert_method(j_method, j_method_lines)
+        str_list.append(ET.tostring(each_node, encoding="unicode"))
+        destroy_tree(each_node)
+
+    for each in str_list:
+        c_methods.append(ET.fromstring(each))
 
     add_counters(j_class, c_class)
     convert_lines(all_j_lines, c_class)
-
-    # clean up
-    destroy_trees(all_j_methods)
     return c_class
 
 
@@ -137,8 +139,14 @@ def convert_package(j_package):
     c_package.attrib["name"] = j_package.attrib["name"].replace("/", ".")
 
     c_classes = ET.SubElement(c_package, "classes")
+    str_list = []
     for j_class in j_package.findall("class"):
-        c_classes.append(convert_class(j_class, j_package))
+        each_node = convert_class(j_class, j_package)
+        str_list.append(ET.tostring(each_node, encoding="unicode"))
+        destroy_tree(each_node)
+
+    for each in str_list:
+        c_classes.append(ET.fromstring(each))
 
     add_counters(j_package, c_package)
 
@@ -153,8 +161,14 @@ def convert_root(source, target):
     target.set("timestamp", str(ts))
 
     packages = ET.SubElement(target, "packages")
+    str_list = []
     for package in source.findall("package"):
-        packages.append(convert_package(package))
+        each_node = convert_package(package)
+        str_list.append(ET.tostring(each_node, encoding="unicode"))
+        destroy_tree(each_node)
+
+    for each in str_list:
+        packages.append(ET.fromstring(each))
 
     add_counters(source, target)
 
@@ -163,12 +177,10 @@ def jacoco2cobertura(jacoco_string) -> str:
     root = ET.parse(jacoco_string).getroot()
     into = ET.Element("coverage")
     convert_root(root, into)
-    return f'<?xml version="1.0" ?>{ET.tostring(into, encoding="unicode")}'
-
-
-def destroy_trees(trees):
-    for each in trees:
-        destroy_tree(each)
+    output = f'<?xml version="1.0" ?>{ET.tostring(into, encoding="unicode")}'
+    destroy_tree(root)
+    destroy_tree(into)
+    return output
 
 
 # mem leak in lxml
