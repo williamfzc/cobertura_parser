@@ -1,6 +1,5 @@
 # from: https://github.com/rix0rrr/cover2cover/blob/master/cover2cover.py
 from lxml import etree as ET
-from xml.sax.saxutils import escape
 import re
 import os.path
 
@@ -12,6 +11,7 @@ def find_lines(j_package, filename):
     for sourcefile in sourcefiles:
         if sourcefile.attrib.get("name").split(".")[0] == os.path.basename(filename).split(".")[0]:
             lines = lines + sourcefile.findall("line")
+    destroy_trees(sourcefiles)
     return lines
 
 
@@ -127,6 +127,8 @@ def convert_class(j_class, j_package):
     add_counters(j_class, c_class)
     convert_lines(all_j_lines, c_class)
 
+    # clean up
+    destroy_trees(all_j_methods)
     return c_class
 
 
@@ -162,3 +164,30 @@ def jacoco2cobertura(jacoco_string) -> str:
     into = ET.Element("coverage")
     convert_root(root, into)
     return f'<?xml version="1.0" ?>{ET.tostring(into, encoding="unicode")}'
+
+
+def destroy_trees(trees):
+    for each in trees:
+        destroy_tree(each)
+
+
+# mem leak in lxml
+# https://stackoverflow.com/a/49139904/10641498
+# https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
+def destroy_tree(tree):
+    root = tree
+    node_tracker = {root: [0, None]}
+
+    for node in root.iterdescendants():
+        parent = node.getparent()
+        node_tracker[node] = [node_tracker[parent][0] + 1, parent]
+
+    node_tracker = sorted([(depth, parent, child) for child, (depth, parent)
+                           in node_tracker.items()], key=lambda x: x[0], reverse=True)
+
+    for _, parent, child in node_tracker:
+        if parent is None:
+            break
+        parent.remove(child)
+
+    del tree
