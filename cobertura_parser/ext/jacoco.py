@@ -7,8 +7,7 @@ import os.path
 def find_lines(j_package, filename):
     """Return all <line> elements for a given source file in a package."""
     lines = list()
-    sourcefiles = j_package.findall("sourcefile")
-    for sourcefile in sourcefiles:
+    for sourcefile in j_package.iterfind("sourcefile"):
         if sourcefile.attrib.get("name").split(".")[0] == os.path.basename(filename).split(".")[0]:
             lines = lines + sourcefile.findall("line")
     return lines
@@ -87,7 +86,7 @@ def sum(covered, missed):
 
 
 def counter(source, type, operation=fraction):
-    cs = source.findall("counter")
+    cs = source.iterfind("counter")
     c = next((ct for ct in cs if ct.attrib.get("type") == type), None)
 
     if c is not None:
@@ -117,14 +116,17 @@ def convert_class(j_class, j_package):
 
     all_j_lines = list(find_lines(j_package, c_class.attrib["filename"]))
 
+    # more than 8000 may causes mem issues
+    if len(all_j_lines) > 8000:
+        return c_class
+
     c_methods = ET.SubElement(c_class, "methods")
-    all_j_methods = list(j_class.findall("method"))
+    all_j_methods = list(j_class.iterfind("method"))
     str_list = []
     for j_method in all_j_methods:
         j_method_lines = method_lines(j_method, all_j_methods, all_j_lines)
         each_node = convert_method(j_method, j_method_lines)
         str_list.append(ET.tostring(each_node, encoding="unicode"))
-        destroy_tree(each_node)
 
     for each in str_list:
         c_methods.append(ET.fromstring(each))
@@ -140,10 +142,9 @@ def convert_package(j_package):
 
     c_classes = ET.SubElement(c_package, "classes")
     str_list = []
-    for j_class in j_package.findall("class"):
+    for j_class in j_package.iterfind("class"):
         each_node = convert_class(j_class, j_package)
         str_list.append(ET.tostring(each_node, encoding="unicode"))
-        destroy_tree(each_node)
 
     for each in str_list:
         c_classes.append(ET.fromstring(each))
@@ -162,10 +163,9 @@ def convert_root(source, target):
 
     packages = ET.SubElement(target, "packages")
     str_list = []
-    for package in source.findall("package"):
+    for package in source.iterfind("package"):
         each_node = convert_package(package)
         str_list.append(ET.tostring(each_node, encoding="unicode"))
-        destroy_tree(each_node)
 
     for each in str_list:
         packages.append(ET.fromstring(each))
@@ -178,8 +178,6 @@ def jacoco2cobertura(jacoco_string) -> str:
     into = ET.Element("coverage")
     convert_root(root, into)
     output = f'<?xml version="1.0" ?>{ET.tostring(into, encoding="unicode")}'
-    destroy_tree(root)
-    destroy_tree(into)
     return output
 
 
