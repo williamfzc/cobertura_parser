@@ -1,10 +1,10 @@
 import typing
-from cobertura_parser.ext.models.builtin import (
+from cobertura_parser.models.builtin import (
     CoberturaStructure,
     CoberturaStructureSlim,
 )
-from cobertura_parser.ext.models.snapshot import CodeSnapshot
-from cobertura_parser.ext.models.coverage import Coverage
+from cobertura_parser.models.snapshot import CodeSnapshot, CodeSnapshotFat
+from cobertura_parser.models.coverage import Coverage
 
 
 class CoberturaProcessor(object):
@@ -20,6 +20,14 @@ class CoberturaProcessor(object):
         if isinstance(data, CoberturaStructure):
             return CodeSnapshot.from_normal(data)
         return CodeSnapshot.from_slim(data)
+
+    @classmethod
+    def get_code_snapshot_fat(
+        cls, data: typing.Union[CoberturaStructure, CoberturaStructureSlim]
+    ) -> CodeSnapshotFat:
+        if isinstance(data, CoberturaStructure):
+            return CodeSnapshotFat.from_normal(data)
+        return CodeSnapshotFat.from_slim(data)
 
     @classmethod
     def get_coverage(

@@ -1,57 +1,57 @@
+from cobertura_parser.loader import CoberturaLoader
+from cobertura_parser.models.builtin import (
+    CoberturaStructure,
+    CoberturaStructureSlim,
+)
+from cobertura_parser.models.snapshot import CodeSnapshot
+from cobertura_parser.processor import CoberturaProcessor
+import xmltodict
 import pathlib
-from cobertura_parser import CoberturaParser
 
 
-cobertura_xml = pathlib.Path(__file__).parent / "data" / "cobertura.xml"
-
-with open(cobertura_xml) as f:
-    cobertura_content = f.read()
+DATA_FILE = pathlib.Path(__file__).parent / "data" / "cobertura.xml"
 
 
-def test_read():
-    c = CoberturaParser.from_file(cobertura_xml)
-    assert isinstance(c, CoberturaParser)
-    assert c._raw
+def test_loader_roundtripping():
+    with open(DATA_FILE) as f:
+        before = f.read()
+    after = xmltodict.unparse(CoberturaLoader.from_str(before, to_dict=True))
+    assert xmltodict.parse(before) == xmltodict.parse(after)
 
 
-def test_get_data():
-    c = CoberturaParser.from_str(cobertura_content)
-    assert c.get_data()
+def test_loader_model_roundtripping():
+    with open(DATA_FILE) as f:
+        origin = f.read()
+    before = CoberturaLoader.from_str(origin, to_dict=True)
+    after = CoberturaStructure(**before).to_origin()
+    assert xmltodict.unparse(before) == xmltodict.unparse(after)
 
 
-def test_tree_package():
-    c = CoberturaParser.from_str(cobertura_content)
-    for each in c.get_package_trees():
-        assert each.root.__dict__
+def test_snapshot():
+    r = CoberturaLoader.from_file(DATA_FILE)
+    snapshot = CoberturaProcessor.get_code_snapshot(r)
+    assert isinstance(snapshot, CodeSnapshot)
 
 
-def test_tree_class():
-    c = CoberturaParser.from_str(cobertura_content)
-    for each in c.get_class_trees():
-        assert each.root.__dict__
+def test_coverage():
+    def _all_method_hit(c: CoberturaStructureSlim):
+        for each_pkg in c.packages:
+            for each_kls in each_pkg.classes:
+                for each_method in each_kls.methods:
+                    if not each_method.is_hit():
+                        return False
+        return True
+
+    r = CoberturaLoader.from_file(DATA_FILE)
+    before = r.slim()
+    assert not _all_method_hit(before)
+    after = CoberturaProcessor.get_coverage(before)
+    assert _all_method_hit(after)
 
 
-def test_tree_method():
-    c = CoberturaParser.from_str(cobertura_content)
-    for each in c.get_class_trees():
-        assert each.root.__dict__
-
-
-def test_tree():
-    c = CoberturaParser.from_str(cobertura_content)
-    assert c.tree
-    packages = c.get_package_trees()
-    for each_package in packages:
-        for each_classes in c.get_class_trees(each_package):
-            for each_methods in c.get_method_trees(each_classes):
-                assert each_methods.root.__dict__
-                assert each_methods.root
-
-
-def test_get_node_info():
-    c = CoberturaParser.from_str(cobertura_content)
-    assert c.tree
-    packages = c.get_package_trees()
-    for each_package in packages:
-        name = c.get_node_attr(each_package.root, "name")
-        assert name is not None
+def test_slim():
+    r = CoberturaLoader.from_file(DATA_FILE)
+    slim = r.slim()
+    sub_slim = r.coverage.slim()
+    assert isinstance(slim, CoberturaStructureSlim)
+    assert slim.json() == sub_slim.json()

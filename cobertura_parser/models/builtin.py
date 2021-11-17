@@ -4,7 +4,7 @@ see http://cobertura.sourceforge.net/xml/coverage-04.dtd
 """
 from pydantic import BaseModel
 import typing
-from cobertura_parser.ext.models.utils import unused_dict_to_list
+from cobertura_parser.utils import unused_dict_to_list
 
 TYPE_ORIGIN_CONDITIONS = typing.Dict[
     str, typing.Union["CoberturaCondition", typing.List["CoberturaCondition"]]
@@ -57,6 +57,10 @@ class CoberturaLine(BaseModel):
 
     def is_hit(self) -> bool:
         return bool(self.hits)
+
+    def is_in_branch(self) -> bool:
+        # todo: is it correct??
+        return self.branch == "true"
 
 
 class CoberturaMethod(BaseModel):
@@ -135,7 +139,7 @@ class CoberturaPackage(BaseModel):
 
 class CoberturaCoverage(BaseModel):
     sources: typing.Dict[str, typing.Union[str, typing.List[str]]] = None
-    packages: TYPE_ORIGIN_PACKAGES
+    packages: TYPE_ORIGIN_PACKAGES = None
 
     # attrs
     line_rate: float
@@ -145,8 +149,8 @@ class CoberturaCoverage(BaseModel):
     branches_covered: int = None
     branches_valid: int = None
     complexity: float = None
-    version: float
-    timestamp: int
+    version: str = "-1.0"
+    timestamp: float = -1.0
 
     class Config:
         allow_population_by_field_name = True
@@ -217,7 +221,7 @@ class CoberturaPackageSlim(CoberturaPackage):
 
 
 class CoberturaStructureSlim(CoberturaCoverage):
-    packages: typing.List[CoberturaPackageSlim]
+    packages: typing.List[CoberturaPackageSlim] = None
 
     def get_package_list(self) -> typing.List[CoberturaPackage]:
         raise NotImplementedError

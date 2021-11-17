@@ -24,5 +24,7 @@ setup(
         "xmltodict",
         "planter",
         "pydantic",
+        "fire",
     ],
+    entry_points={"console_scripts": ["cobertura_parser = cobertura_parser.cli:main"]},
 )

@@ -1,6 +1,6 @@
 import typing
 from pydantic import BaseModel, validator
-from cobertura_parser.ext.models.builtin import (
+from cobertura_parser.models.builtin import (
     CoberturaMethod,
     CoberturaKlass,
     CoberturaPackage,
@@ -45,4 +45,22 @@ class CodeSnapshot(BaseModel):
 
     @classmethod
     def from_normal(cls, data: CoberturaStructure) -> "CodeSnapshot":
+        return cls.from_slim(data.slim())
+
+
+class CodeSnapshotExt(BaseModel):
+    pass
+
+
+class CodeSnapshotFat(BaseModel):
+    data: CodeSnapshot
+    extras: CodeSnapshotExt = dict()
+
+    @classmethod
+    def from_slim(cls, slim_data: CoberturaStructureSlim) -> "CodeSnapshotFat":
+        # todo: extras will be auto calculated inside
+        return cls(data=slim_data.dict())
+
+    @classmethod
+    def from_normal(cls, data: CoberturaStructure) -> "CodeSnapshotFat":
         return cls.from_slim(data.slim())
