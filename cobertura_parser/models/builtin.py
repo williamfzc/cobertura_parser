@@ -149,7 +149,7 @@ class CoberturaCoverage(BaseModel):
     branches_covered: int = None
     branches_valid: int = None
     complexity: float = None
-    version: str = "-1.0"
+    version: float = -1.0
     timestamp: float = -1.0
 
     class Config:
