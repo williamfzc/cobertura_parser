@@ -8,7 +8,10 @@ def find_lines(j_package, filename):
     """Return all <line> elements for a given source file in a package."""
     lines = list()
     for sourcefile in j_package.iterfind("sourcefile"):
-        if sourcefile.attrib.get("name").split(".")[0] == os.path.basename(filename).split(".")[0]:
+        if (
+            sourcefile.attrib.get("name").split(".")[0]
+            == os.path.basename(filename).split(".")[0]
+        ):
             lines = lines + sourcefile.findall("line")
     return lines
 
@@ -112,7 +115,10 @@ def convert_method(j_method, j_lines):
 def convert_class(j_class, j_package):
     c_class = ET.Element("class")
     c_class.set("name", j_class.attrib["name"].replace("/", "."))
-    c_class.set("filename", guess_filename(j_class.attrib["name"], j_class.attrib["sourcefilename"]))
+    c_class.set(
+        "filename",
+        guess_filename(j_class.attrib["name"], j_class.attrib["sourcefilename"]),
+    )
 
     all_j_lines = list(find_lines(j_package, c_class.attrib["filename"]))
 
@@ -192,8 +198,11 @@ def destroy_tree(tree):
         parent = node.getparent()
         node_tracker[node] = [node_tracker[parent][0] + 1, parent]
 
-    node_tracker = sorted([(depth, parent, child) for child, (depth, parent)
-                           in node_tracker.items()], key=lambda x: x[0], reverse=True)
+    node_tracker = sorted(
+        [(depth, parent, child) for child, (depth, parent) in node_tracker.items()],
+        key=lambda x: x[0],
+        reverse=True,
+    )
 
     for _, parent, child in node_tracker:
         if parent is None:

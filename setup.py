@@ -25,6 +25,7 @@ setup(
         "planter",
         "pydantic",
         "fire",
+        "lxml",
     ],
     entry_points={"console_scripts": ["cobertura_parser = cobertura_parser.cli:main"]},
 )
