@@ -134,6 +134,15 @@ class TerminalCli(object):
             with open(to_file, "w") as f:
                 f.write(json.dumps(json_content))
 
+    def data_from_lcov_to_cov(self, from_file: str, to_file: str, dev: bool = None):
+        with time_measure("data_from_lcov_to_cov", dev):
+            with open(from_file) as f:
+                structure: CoberturaStructure = CoberturaLoader.from_str(
+                    lcov2cobertura(f.read())
+                )
+            with open(to_file, "w") as f:
+                f.write(self._cov(structure))
+
 
 def main():
     fire.Fire(TerminalCli)
