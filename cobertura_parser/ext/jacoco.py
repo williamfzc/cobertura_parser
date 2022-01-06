@@ -9,8 +9,8 @@ def find_lines(j_package, filename):
     lines = list()
     for sourcefile in j_package.iterfind("sourcefile"):
         if (
-            sourcefile.attrib.get("name").split(".")[0]
-            == os.path.basename(filename).split(".")[0]
+                sourcefile.attrib.get("name").split(".")[0]
+                == os.path.basename(filename).split(".")[0]
         ):
             lines = lines + sourcefile.findall("line")
     return lines
@@ -115,9 +115,16 @@ def convert_method(j_method, j_lines):
 def convert_class(j_class, j_package):
     c_class = ET.Element("class")
     c_class.set("name", j_class.attrib["name"].replace("/", "."))
+
+    # source file name can be None
+    try:
+        source_file_name = j_class.attrib["sourcefilename"]
+    except KeyError:
+        source_file_name = ""
+
     c_class.set(
         "filename",
-        guess_filename(j_class.attrib["name"], j_class.attrib["sourcefilename"]),
+        guess_filename(j_class.attrib["name"], source_file_name),
     )
 
     all_j_lines = list(find_lines(j_package, c_class.attrib["filename"]))
